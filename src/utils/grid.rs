@@ -4,7 +4,7 @@ use sdl2::video::Window;
 use sdl2::pixels::Color;
 use sdl2::rect::{ Rect, Point };
 
-use rand::thread_rng;
+use rand::Rng;
 
 use std::io::Write;
 
@@ -87,12 +87,16 @@ impl GridBuilder {
         }
     }
 
-    pub fn with_dimentions(mut self, w: i32, h: i32) -> Self {
+    pub fn with_dimentions(mut self, w: i32, h: i32, randomize: bool) -> Self {
         let mut cells = Vec::<Vec<Cell>>::with_capacity(h as usize);
         for j in 0..h {
             let mut cell_row = Vec::<Cell>::with_capacity(w as usize);
             for i in 0..w {
-                cell_row.push(Cell::new((j, i), 1).unwrap());
+                if !randomize {
+                    cell_row.push(Cell::new((j, i), 1).unwrap());
+                } else {
+                    cell_row.push(Cell::rand((j, i)));
+                }
             }
             cells.push(cell_row);
         }
@@ -134,6 +138,12 @@ impl Cell {
             pos,
             moviment_dificulty,
         })
+    }
+    fn rand(pos: (i32, i32)) -> Self {
+        Self {
+            pos,
+            moviment_dificulty: rand::thread_rng().gen_range(0..=8),
+        }
     }
 }
 

@@ -16,6 +16,8 @@ use sdl2::pixels::Color;
 use std::thread::sleep;
 use std::time::Duration;
 
+use rand::Rng;
+
 use utils::grid::grid;
 
 fn main() -> Result<()> {
@@ -33,7 +35,7 @@ fn main() -> Result<()> {
 
     // dev-test
     let grid = grid()
-        .with_dimentions(16, 12)
+        .with_dimentions(16, 12, true)
         .with_paddings(800, 600)
         .build()?;
 
