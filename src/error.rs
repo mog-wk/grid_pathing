@@ -5,6 +5,8 @@ pub enum Error {
     Generic(String),
     #[error("grid build error")]
     GridBuildError,
+    #[error("Error Creating Cell: {0}")]
+    CellCreationError(String),
 
     #[error(transparent)]
     WindowBuildError(#[from] sdl2::video::WindowBuildError),
