@@ -35,8 +35,8 @@ fn main() -> Result<()> {
 
     // dev-test
     let grid = grid()
-        .with_dimentions(16, 12, true)
-        .with_paddings(800, 600)
+        .with_dimentions(16, 12)
+        .with_paddings_from(800, 600)
         .build()?;
 
     grid.dev_print();

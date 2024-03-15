@@ -1,4 +1,5 @@
 use crate::error::Error;
+
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 use sdl2::pixels::Color;
@@ -80,6 +81,12 @@ impl Grid {
         writeln!(handler, "paddings: {:?}", self.paddings);
         
     }
+    pub fn get_cell(&self, i: usize, j: usize) -> Result<&Cell, Error> {
+        let cell = self.cells
+            .get(i).ok_or(Error::GridCellAccessError)?
+            .get(j).ok_or(Error::GridCellAccessError)?;
+        Ok(cell)
+    }
 }
 
 pub fn grid() -> GridBuilder {
@@ -102,12 +109,12 @@ impl GridBuilder {
         }
     }
 
-    pub fn with_dimentions(mut self, w: i32, h: i32, randomize: bool) -> Self {
+    pub fn with_dimentions(mut self, w: i32, h: i32) -> Self {
         self.dimentions = Some((w as u32, h as u32));
         self
     }
 
-    pub fn with_paddings(mut self, w: u32, h: u32) -> Self {
+    pub fn with_paddings_from(mut self, w: u32, h: u32) -> Self {
         self.paddings = Some((w /self.dimentions.unwrap().0, h /self.dimentions.unwrap().1));
         self
         }
@@ -127,9 +134,9 @@ impl GridBuilder {
             let mut cell_row = Vec::<Cell>::with_capacity(h as usize);
             for j in 0..h {
                 if !randomize {
-                    cell_row.push(Cell::new((i * pw, j * ph), 1).unwrap());
+                    cell_row.push(Cell::new((i * pw, j * ph), Some((i as usize, j as usize)), 1).unwrap());
                 } else {
-                    cell_row.push(Cell::rand((i * pw, j * ph)));
+                    cell_row.push(Cell::rand((i * pw, j * ph), Some((i as usize, j as usize))));
                 }
             }
             cells.push(cell_row);
@@ -151,26 +158,32 @@ impl GridBuilder {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-struct Cell {
+pub struct Cell {
     pos: (i32, i32), // abs cell pos
+    grid_pos: Option<(usize, usize)>, // grid's cell pos
     moviment_dificulty: u8,
 }
 
 impl Cell {
-    fn new(pos: (i32, i32), moviment_dificulty: u8) -> Result<Self, Error> {
+    fn new(pos: (i32, i32), grid_pos: Option<(usize, usize)>, moviment_dificulty: u8) -> Result<Self, Error> {
         if moviment_dificulty > 8 {
             return Err(Error::CellCreationError(format!("{}", moviment_dificulty)));
         }
         Ok(Self {
             pos,
+            grid_pos,
             moviment_dificulty,
         })
     }
-    fn rand(pos: (i32, i32)) -> Self {
+    fn rand(pos: (i32, i32), grid_pos: Option<(usize, usize)>) -> Self {
         Self {
             pos,
+            grid_pos,
             moviment_dificulty: rand::thread_rng().gen_range(0..=8),
         }
+    }
+    pub fn grid_pos(&self) -> Option<(usize, usize)> {
+        self.grid_pos
     }
 }
 
