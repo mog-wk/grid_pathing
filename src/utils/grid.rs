@@ -67,6 +67,24 @@ impl Grid {
     pub fn dimentions(&self) -> (u32, u32) {
         self.dimentions
     }
+    pub fn get_cell(&self, i: usize, j: usize) -> Result<&Cell, Error> {
+        let cell = self.cells
+            .get(i).ok_or(Error::GridCellAccessError(format!("i: {}", i)))?
+            .get(j).ok_or(Error::GridCellAccessError(format!("j: {}", j)))?;
+        Ok(cell)
+    }
+    // ======== Dev Testing Functions ======== 
+    pub fn dev_print_mov_grid(&self) {
+        let stdout = std::io::stdout();
+        let mut handler = std::io::BufWriter::new(stdout);
+
+        for row in &self.cells {
+            for cell in row {
+                write!(handler, "({:?} {}), ", cell.grid_pos.unwrap(), cell.moviment_dificulty); 
+            }
+        write!(handler, "\n");
+        }
+    }
     pub fn dev_print(&self) {
         let stdout = std::io::stdout();
         let mut handler = std::io::BufWriter::new(stdout);
@@ -80,12 +98,6 @@ impl Grid {
         writeln!(handler, "dimnetions: {:?}", self.dimentions);
         writeln!(handler, "paddings: {:?}", self.paddings);
         
-    }
-    pub fn get_cell(&self, i: usize, j: usize) -> Result<&Cell, Error> {
-        let cell = self.cells
-            .get(i).ok_or(Error::GridCellAccessError)?
-            .get(j).ok_or(Error::GridCellAccessError)?;
-        Ok(cell)
     }
 }
 

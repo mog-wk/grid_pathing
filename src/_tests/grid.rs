@@ -20,7 +20,7 @@ fn grid_simple() {
     assert_eq!(x.dimentions(), (12, 12));
 }
 #[test]
-fn grid_get_cell() {
+fn grid_get_cell_1() {
     // FIXTURE
     let x = GridBuilder::new()
         .with_dimentions(5, 5)
@@ -34,6 +34,22 @@ fn grid_get_cell() {
 
     // CHECK
     assert_eq!(aws.grid_pos().unwrap(), (2, 4));
+}
+#[test]
+fn grid_get_cell_2() {
+    // FIXTURE
+    let x = GridBuilder::new()
+        .with_dimentions(5, 5)
+        .build()
+        .unwrap();
+
+    // ACTION
+    let aws = x.get_cell(4, 4).unwrap();
+
+    println!("{:?}", aws);
+
+    // CHECK
+    assert_eq!(aws.grid_pos().unwrap(), (4, 4));
 }
 #[test]
 #[should_panic]

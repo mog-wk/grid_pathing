@@ -7,6 +7,8 @@ pub enum Error {
     GridBuildError,
     #[error("Error Creating Cell: {0}")]
     CellCreationError(String),
+    #[error("cell access error index: {0}")]
+    GridCellAccessError(String),
 
     #[error(transparent)]
     WindowBuildError(#[from] sdl2::video::WindowBuildError),
