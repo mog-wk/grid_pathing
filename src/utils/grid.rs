@@ -36,15 +36,30 @@ impl Grid {
                 Point::new(w, sz.1),
             );
         }
-        let off_set = 1;
         canvas.draw_line(
-            Point::new(0, sz.1-off_set),
-            Point::new(sz.0, sz.1-off_set),
+            Point::new(0, sz.1-1),
+            Point::new(sz.0, sz.1-1),
         );
         canvas.draw_line(
-            Point::new(sz.0-off_set, 0),
-            Point::new(sz.0-off_set, sz.1),
+            Point::new(sz.0-1, 0),
+            Point::new(sz.0-1, sz.1),
         );
+
+        // cell tranpasibility
+        let off_set = 6;
+        for row in self.cells.iter() {
+            for cell in row {
+                let r = cell.moviment_dificulty * 20;
+                let b = 12;
+                let g = 12;
+                canvas.set_draw_color(Color::RGB(r, g, b));
+                canvas.fill_rect(Rect::new(
+                        cell.pos.0+off_set, cell.pos.1+off_set, 
+                        self.paddings.0 - (2*off_set) as u32,
+                        self.paddings.1 - (2*off_set) as u32,
+                ));
+            }
+        }
 
         Ok(())
     }
@@ -57,7 +72,7 @@ impl Grid {
         let (w, h) = self.dimentions;
         for j in 0..h {
             for i in 0..w {
-                writeln!(handler, "{:?}", self.cells[j as usize][i as usize]);
+                writeln!(handler, "{:?}", self.cells[i as usize][j as usize]);
             }
         }
 
@@ -74,63 +89,75 @@ pub fn grid() -> GridBuilder {
 #[derive(Debug, Default)]
 pub struct GridBuilder {
     cells: Option<Vec<Vec<Cell>>>,
-    dimentions: (u32, u32),
-    paddings: (u32, u32),
+    dimentions: Option<(u32, u32)>,
+    paddings: Option<(u32, u32)>,
 }
 
 impl GridBuilder {
     pub fn new() -> Self {
         Self {
             cells: None,
-            dimentions: (0, 0),
-            paddings: (0, 0),
+            dimentions: Some((0, 0)),
+            paddings: Some((0, 0)),
         }
     }
 
     pub fn with_dimentions(mut self, w: i32, h: i32, randomize: bool) -> Self {
-        let mut cells = Vec::<Vec<Cell>>::with_capacity(h as usize);
-        for j in 0..h {
-            let mut cell_row = Vec::<Cell>::with_capacity(w as usize);
-            for i in 0..w {
-                if !randomize {
-                    cell_row.push(Cell::new((j, i), 1).unwrap());
-                } else {
-                    cell_row.push(Cell::rand((j, i)));
-                }
-            }
-            cells.push(cell_row);
-        }
-        self.dimentions = (w as u32, h as u32);
-        self.cells = Some(cells);
+        self.dimentions = Some((w as u32, h as u32));
         self
     }
 
     pub fn with_paddings(mut self, w: u32, h: u32) -> Self {
-        self.paddings = (w /self.dimentions.0, h /self.dimentions.1);
+        self.paddings = Some((w /self.dimentions.unwrap().0, h /self.dimentions.unwrap().1));
         self
         }
+    pub fn init_cells(mut self, randomize: bool) -> Self {
+        let Some(dimentions) = self.dimentions else {
+            panic!();
+        };
+        let (w, h) = (dimentions.0 as i32, dimentions.1 as i32);
+
+        let Some(paddings) = self.paddings else {
+            panic!();
+        };
+        let (pw, ph) = (paddings.0 as i32, paddings.1 as i32);
+
+        let mut cells = Vec::<Vec<Cell>>::with_capacity(w as usize);
+        for i in 0..w {
+            let mut cell_row = Vec::<Cell>::with_capacity(h as usize);
+            for j in 0..h {
+                if !randomize {
+                    cell_row.push(Cell::new((i * pw, j * ph), 1).unwrap());
+                } else {
+                    cell_row.push(Cell::rand((i * pw, j * ph)));
+                }
+            }
+            cells.push(cell_row);
+        }
+        self.cells = Some(cells);
+        self
+    }
 
     pub fn build(mut self) -> Result<Grid, Error> {
-        let Some(cells) = self.cells else {
-            return Err(Error::GridBuildError);
-        };
+
+        self = self.init_cells(true);
 
         Ok(Grid {
-            cells,
-            dimentions: self.dimentions,
-            paddings: self.paddings,
+            cells: self.cells.ok_or(Error::GridBuildError)?,
+            dimentions: self.dimentions.ok_or(Error::GridBuildError)?,
+            paddings: self.paddings.ok_or(Error::GridBuildError)?,
         })
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 struct Cell {
-    pos: (i32, i32),
-    moviment_dificulty: u32,
+    pos: (i32, i32), // abs cell pos
+    moviment_dificulty: u8,
 }
 
 impl Cell {
-    fn new(pos: (i32, i32), moviment_dificulty: u32) -> Result<Self, Error> {
+    fn new(pos: (i32, i32), moviment_dificulty: u8) -> Result<Self, Error> {
         if moviment_dificulty > 8 {
             return Err(Error::CellCreationError(format!("{}", moviment_dificulty)));
         }
