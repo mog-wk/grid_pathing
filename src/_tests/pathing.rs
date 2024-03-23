@@ -70,12 +70,25 @@ fn heuristic_pitagorean() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(x, aws);
     Ok(())
 }
+#[test]
+fn path_find() -> Result<(), Box<dyn std::error::Error>> {
+    let grid = crate::utils::grid::grid()
+        .with_dimentions(5, 5)
+        .with_paddings_from(800, 600)
+        .build()
+        .unwrap();
+    grid.dev_print_mov_grid();
+    // FIXTURE
+    let c1 = grid.get_cell(0, 0)?;
+    let c2 = grid.get_cell(4, 3)?;
+    let x = find(&grid, c1, c2, pitagorean_heuristic);
 
-
+    println!("{:?}", x);
+    Ok(())
+}
 fn print_cell_vec(cell_vec: &Vec<&Cell>) {
     for cell in cell_vec {
         print!("({:?} ) ", cell.grid_pos());
     }
     print!("\n");
 }
-

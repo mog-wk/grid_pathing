@@ -19,6 +19,7 @@ use std::time::Duration;
 use rand::Rng;
 
 use utils::grid::grid;
+use utils::pathing;
 
 fn main() -> Result<()> {
     let sdl_context = sdl2::init()?;
@@ -39,7 +40,12 @@ fn main() -> Result<()> {
         .with_paddings_from(800, 600)
         .build()?;
 
-    grid.dev_print();
+    //grid.dev_print();
+
+    let c1 = grid.get_cell(0, 0)?;
+    let c2 = grid.get_cell(2, 0)?;
+    let path = pathing::find(&grid, &c1, &c2, pathing::pitagorean_heuristic).unwrap();
+    println!("{:?}", path);
 
     let mut event_pump = sdl_context.event_pump()?;
 
@@ -60,9 +66,19 @@ fn main() -> Result<()> {
         // render
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
-        grid.render(&mut canvas,
-            Color::RGB(127, 127, 127),
-        );
+        grid.render(&mut canvas, Color::RGB(127, 127, 127));
+        canvas.set_draw_color(Color::RGB(0, 127, 0));
+        for p in path.iter() {
+            let x = p.0 as i32;
+            let y = p.1 as i32;
+            let k = 12_u32;
+            canvas.fill_rect(sdl2::rect::Rect::new(
+                x * grid.paddings.0 as i32 + k as i32,
+                y * grid.paddings.1 as i32 + k as i32,
+                grid.paddings.0 - k*2,
+                grid.paddings.1 - k*2,
+            ));
+        }
         canvas.present();
 
         sleep(Duration::from_millis(60));

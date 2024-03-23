@@ -12,8 +12,9 @@ use std::io::Write;
 #[derive(Debug, PartialEq)]
 pub struct Grid {
     cells: Vec<Vec<Cell>>,
+    size: (u32, u32),
     dimentions: (u32, u32), // cells in width and height
-    paddings: (u32, u32)
+    pub paddings: (u32, u32),
 }
 
 impl Grid {
@@ -50,7 +51,8 @@ impl Grid {
         let off_set = 6;
         for row in self.cells.iter() {
             for cell in row {
-                let r = cell.moviment_dificulty * 20;
+                //let r = cell.moviment_dificulty * 20;
+                let r = 12;
                 let b = 12;
                 let g = 12;
                 canvas.set_draw_color(Color::RGB(r, g, b));
@@ -66,6 +68,9 @@ impl Grid {
     }
     pub fn dimentions(&self) -> (u32, u32) {
         self.dimentions
+    }
+    pub fn size(&self) -> (u32, u32) {
+       self.size
     }
     pub fn get_cell(&self, i: usize, j: usize) -> Result<&Cell, Error> {
         let cell = self.cells
@@ -108,6 +113,7 @@ pub fn grid() -> GridBuilder {
 #[derive(Debug, Default)]
 pub struct GridBuilder {
     cells: Option<Vec<Vec<Cell>>>,
+    size: Option<(u32, u32)>,
     dimentions: Option<(u32, u32)>,
     paddings: Option<(u32, u32)>,
 }
@@ -116,6 +122,7 @@ impl GridBuilder {
     pub fn new() -> Self {
         Self {
             cells: None,
+            size: Some((0, 0)),
             dimentions: Some((0, 0)),
             paddings: Some((0, 0)),
         }
@@ -128,6 +135,7 @@ impl GridBuilder {
 
     pub fn with_paddings_from(mut self, w: u32, h: u32) -> Self {
         self.paddings = Some((w /self.dimentions.unwrap().0, h /self.dimentions.unwrap().1));
+        self.size = Some((w, h));
         self
         }
     pub fn init_cells(mut self, randomize: bool) -> Self {
@@ -163,6 +171,7 @@ impl GridBuilder {
 
         Ok(Grid {
             cells: self.cells.ok_or(Error::GridBuildError)?,
+            size: self.size.ok_or(Error::GridBuildError)?,
             dimentions: self.dimentions.ok_or(Error::GridBuildError)?,
             paddings: self.paddings.ok_or(Error::GridBuildError)?,
         })
