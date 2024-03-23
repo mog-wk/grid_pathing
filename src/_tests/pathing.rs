@@ -27,7 +27,7 @@ fn path_get_neighbors() {
     // mid
     let cell = grid.get_cell(2, 2).unwrap();
     let n = get_neighbors(&grid, &cell);
-    println!("cell: {:?}", cell);
+    println!("cell: {:?}\n", cell);
     assert_eq!(n.len(), 8);
 
     // bot-right
@@ -42,6 +42,33 @@ fn path_get_neighbors() {
             assert!(aws.contains(&raw) == true);
         }
     }
+}
+#[test]
+fn heuristic_pitagorean() -> Result<(), Box<dyn std::error::Error>> {
+    let grid = crate::utils::grid::grid()
+        .with_dimentions(5, 5)
+        .with_paddings_from(800, 600)
+        .build()
+        .unwrap();
+    grid.dev_print_mov_grid();
+
+    // FIXTURE
+    let x = pitagorean_heuristic(grid.get_cell(2, 2)?, grid.get_cell(4, 2)?)?;
+
+    // ACTION
+    let aws = 320.0;
+
+    // CHECK
+    assert_eq!(x, aws);
+    // FIXTURE
+    let x = pitagorean_heuristic(grid.get_cell(2, 2)?, grid.get_cell(4, 3)?)?;
+
+    // ACTION
+    let aws = 341.0;
+
+    // CHECK
+    assert_eq!(x, aws);
+    Ok(())
 }
 
 

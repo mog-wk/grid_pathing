@@ -194,6 +194,9 @@ impl Cell {
             moviment_dificulty: rand::thread_rng().gen_range(0..=8),
         }
     }
+    pub fn pos(&self) -> (i32, i32) {
+        self.pos
+    }
     pub fn grid_pos(&self) -> Option<(usize, usize)> {
         self.grid_pos
     }

@@ -1,12 +1,13 @@
 // using A-Start pathfinding
 
 use super::grid::*;
+use crate::error::Error;
 
 pub fn find(
     grid: &Grid,
     start: &Cell,
     end: &Cell,
-    heuristic: impl Fn(&Cell, &Cell) -> u32,
+    heuristic: impl Fn(&Cell, &Cell) -> Result<f64, Error>,
 ) -> Vec<Cell> {
     let mut path: Vec<&Cell> = vec![];
     let mut stack = vec![start];
@@ -16,6 +17,16 @@ pub fn find(
         let neighbors: Vec<&Cell> = get_neighbors(grid, cur);
     }
     todo!()
+}
+
+pub fn pitagorean_heuristic(start: &Cell, end: &Cell) -> Result<f64, Error> {
+    let start = start.pos() ;
+    let end  = end.pos() ;
+
+    let start = (start.0 as f64, start.1 as f64);
+    let end = (end.0 as f64, end.1 as f64);
+
+    Ok(f64::sqrt( f64::abs(end.0 - start.0).powf(2.0) + f64::abs(end.1 - start.1).powf(2.0) ).floor())
 }
 
 fn get_neighbors<'a>(grid: &'a Grid, cell: &'a Cell) -> Vec<&'a Cell> {
