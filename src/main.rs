@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     let video_context = sdl_context.video()?;
 
     let window = video_context
-        .window("Doon Maze", 800, 600)
+        .window("Pathfinding", 800, 600)
         .position(0, 0)
         .vulkan()
         .build()?;
@@ -48,11 +48,9 @@ fn main() -> Result<()> {
         grid.paddings
     );
 
-    let c1 = grid.get_cell(0, 0)?;
-    let c2 = grid.get_cell(12, 10)?;
-    let mut path = pathing::find(&grid, &c1, &c2, pathing::pitagorean_heuristic).unwrap();
+    let mut path_list = Vec::<Vec<(usize, usize)>>::with_capacity(8);
 
-    let mut current_cell = c2;
+    let mut current_cell = grid.get_cell(0, 0)?;
 
     let mut event_pump = sdl_context.event_pump()?;
 
@@ -92,15 +90,11 @@ fn main() -> Result<()> {
 
                         match p_path {
                             Some(p) => {
-                                println!(
-                                    "{},{} {:?}\n{:?}\n{:?}",
-                                    mouse.x(),
-                                    mouse.y(),
-                                    grid.dimentions(),
-                                    cell,
-                                    &p,
-                                );
-                                path = p;
+                                if path_list.len() >= 8 {
+                                } else {
+                                    println!("{:?} {:?}", p, current_cell);
+                                    path_list.push(p);
+                                }
                                 current_cell = cell;
                             }
                             None => (),
@@ -113,10 +107,7 @@ fn main() -> Result<()> {
         }
         for button in old_buttons.iter() {
             match button {
-                MouseButton::Left => {
-                    println!("test release");
-                    println!("{:?}", old_buttons);
-                }
+                MouseButton::Left => (),
                 _ => (),
             }
         }
@@ -128,17 +119,21 @@ fn main() -> Result<()> {
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
         grid.render(&mut canvas, Color::RGB(127, 127, 127));
-        canvas.set_draw_color(Color::RGB(0, 127, 0));
-        for p in path.iter() {
-            let x = p.0 as i32;
-            let y = p.1 as i32;
-            let k = 12_u32;
-            canvas.fill_rect(sdl2::rect::Rect::new(
-                x * grid.paddings.0 as i32 + k as i32,
-                y * grid.paddings.1 as i32 + k as i32,
-                grid.paddings.0 - k * 2,
-                grid.paddings.1 - k * 2,
-            ));
+        let mut i = path_list.len();
+        for path in path_list.iter() {
+            canvas.set_draw_color(utils::path_colors::ORDER[i - 1]);
+            for p in path.iter() {
+                let x = p.0 as i32;
+                let y = p.1 as i32;
+                let k = 12_u32;
+                canvas.fill_rect(sdl2::rect::Rect::new(
+                    x * grid.paddings.0 as i32 + k as i32,
+                    y * grid.paddings.1 as i32 + k as i32,
+                    grid.paddings.0 - k * 2,
+                    grid.paddings.1 - k * 2,
+                ));
+            }
+            i -= 1;
         }
         canvas.present();
 
