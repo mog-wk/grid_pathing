@@ -17,7 +17,6 @@ pub fn find(
 
     let end_pos = end.grid_pos()?;
 
-
     let mut visited = HashSet::<(usize, usize)>::new();
     visited.insert(start.grid_pos()?);
 
@@ -33,17 +32,10 @@ pub fn find(
         let mut closest = cur;
         let dist = grid.size();
         let mut dist = u32::max(dist.0, dist.1) as f64;
-        println!("{:?}", cur.grid_pos()?);
-
-        for n in neighbors.iter() {
-            print!("{:?} -> ", n.grid_pos().unwrap());
-        }
-        print!("\n{:?}\n", visited);
 
         for n in neighbors.into_iter() {
             if visited.contains(&n.grid_pos()?) {
-                println!("asdasd");
-                continue
+                continue;
             }
             let h = heuristic(n, end).ok()?;
             if h < dist {
@@ -53,7 +45,7 @@ pub fn find(
         }
         if closest.grid_pos() == cur.grid_pos() {
             return None;
-        } 
+        }
         if closest.grid_pos()? == end_pos {
             hodos.push(end_pos);
             return Some(hodos);
@@ -88,7 +80,11 @@ pub fn pitagorean_heuristic(start: &Cell, end: &Cell) -> Result<f64, Error> {
     )
 }
 
-fn get_neighbors<'a>(grid: &'a Grid, cell: &'a Cell, excluded: &HashSet<(usize, usize)>) -> Vec<&'a Cell> {
+fn get_neighbors<'a>(
+    grid: &'a Grid,
+    cell: &'a Cell,
+    excluded: &HashSet<(usize, usize)>,
+) -> Vec<&'a Cell> {
     let mut neighbors = Vec::with_capacity(8);
 
     let id = cell.grid_pos().unwrap();

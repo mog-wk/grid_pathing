@@ -1,9 +1,9 @@
 use crate::error::Error;
 
+use sdl2::pixels::Color;
+use sdl2::rect::{Point, Rect};
 use sdl2::render::Canvas;
 use sdl2::video::Window;
-use sdl2::pixels::Color;
-use sdl2::rect::{ Rect, Point };
 
 use rand::Rng;
 
@@ -12,8 +12,8 @@ use std::io::Write;
 #[derive(Debug, PartialEq)]
 pub struct Grid {
     cells: Vec<Vec<Cell>>,
-    size: (u32, u32),
-    dimentions: (u32, u32), // cells in width and height
+    size: (u32, u32),       // grid size in pizels
+    dimentions: (u32, u32), // cells quantity (w, h)
     pub paddings: (u32, u32),
 }
 
@@ -26,26 +26,14 @@ impl Grid {
         let (width, height) = self.dimentions;
         for j in 0..=height {
             let h = (j * self.paddings.1) as i32;
-            canvas.draw_line(
-                Point::new(0, h),
-                Point::new(sz.0, h),
-            );
+            canvas.draw_line(Point::new(0, h), Point::new(sz.0, h));
         }
         for i in 0..width {
             let w = (i * self.paddings.0) as i32;
-            canvas.draw_line(
-                Point::new(w, 0),
-                Point::new(w, sz.1),
-            );
+            canvas.draw_line(Point::new(w, 0), Point::new(w, sz.1));
         }
-        canvas.draw_line(
-            Point::new(0, sz.1-1),
-            Point::new(sz.0, sz.1-1),
-        );
-        canvas.draw_line(
-            Point::new(sz.0-1, 0),
-            Point::new(sz.0-1, sz.1),
-        );
+        canvas.draw_line(Point::new(0, sz.1 - 1), Point::new(sz.0, sz.1 - 1));
+        canvas.draw_line(Point::new(sz.0 - 1, 0), Point::new(sz.0 - 1, sz.1));
 
         // cell tranpasibility
         let off_set = 6;
@@ -57,37 +45,63 @@ impl Grid {
                 let g = 12;
                 canvas.set_draw_color(Color::RGB(r, g, b));
                 canvas.fill_rect(Rect::new(
-                        cell.pos.0+off_set, cell.pos.1+off_set, 
-                        self.paddings.0 - (2*off_set) as u32,
-                        self.paddings.1 - (2*off_set) as u32,
+                    cell.pos.0 + off_set,
+                    cell.pos.1 + off_set,
+                    self.paddings.0 - (2 * off_set) as u32,
+                    self.paddings.1 - (2 * off_set) as u32,
                 ));
             }
         }
 
         Ok(())
     }
+
     pub fn dimentions(&self) -> (u32, u32) {
         self.dimentions
     }
+
     pub fn size(&self) -> (u32, u32) {
-       self.size
+        self.size
     }
+
     pub fn get_cell(&self, i: usize, j: usize) -> Result<&Cell, Error> {
-        let cell = self.cells
-            .get(i).ok_or(Error::GridCellAccessError(format!("i: {}", i)))?
-            .get(j).ok_or(Error::GridCellAccessError(format!("j: {}", j)))?;
+        let cell = self
+            .cells
+            .get(i)
+            .ok_or(Error::GridCellAccessError(format!("i: {}", i)))?
+            .get(j)
+            .ok_or(Error::GridCellAccessError(format!("j: {}", j)))?;
         Ok(cell)
     }
-    // ======== Dev Testing Functions ======== 
+
+    pub fn get_cell_by_pos(&self, x: i32, y: i32) -> Result<&Cell, Error> {
+        let i = x / self.paddings.0 as i32;
+        let j = y / self.paddings.1 as i32;
+        println!(" {}, {} | {}, {}", x, y, i, j);
+        let cell = self
+            .cells
+            .get(i as usize)
+            .ok_or(Error::GridCellAccessError(format!("i: {}", i)))?
+            .get(j as usize)
+            .ok_or(Error::GridCellAccessError(format!("j: {}", j)))?;
+        Ok(cell)
+    }
+
+    // ======== Dev Testing Functions ========
     pub fn dev_print_mov_grid(&self) {
         let stdout = std::io::stdout();
         let mut handler = std::io::BufWriter::new(stdout);
 
         for row in &self.cells {
             for cell in row {
-                write!(handler, "({:?} {}), ", cell.grid_pos.unwrap(), cell.moviment_dificulty); 
+                write!(
+                    handler,
+                    "({:?} {}), ",
+                    cell.grid_pos.unwrap(),
+                    cell.moviment_dificulty
+                );
             }
-        write!(handler, "\n");
+            write!(handler, "\n");
         }
     }
     pub fn dev_print(&self) {
@@ -102,7 +116,6 @@ impl Grid {
 
         writeln!(handler, "dimnetions: {:?}", self.dimentions);
         writeln!(handler, "paddings: {:?}", self.paddings);
-        
     }
 }
 
@@ -134,10 +147,13 @@ impl GridBuilder {
     }
 
     pub fn with_paddings_from(mut self, w: u32, h: u32) -> Self {
-        self.paddings = Some((w /self.dimentions.unwrap().0, h /self.dimentions.unwrap().1));
+        self.paddings = Some((
+            w / self.dimentions.unwrap().0,
+            h / self.dimentions.unwrap().1,
+        ));
         self.size = Some((w, h));
         self
-        }
+    }
     pub fn init_cells(mut self, randomize: bool) -> Self {
         let Some(dimentions) = self.dimentions else {
             panic!();
@@ -154,7 +170,9 @@ impl GridBuilder {
             let mut cell_row = Vec::<Cell>::with_capacity(h as usize);
             for j in 0..h {
                 if !randomize {
-                    cell_row.push(Cell::new((i * pw, j * ph), Some((i as usize, j as usize)), 1).unwrap());
+                    cell_row.push(
+                        Cell::new((i * pw, j * ph), Some((i as usize, j as usize)), 1).unwrap(),
+                    );
                 } else {
                     cell_row.push(Cell::rand((i * pw, j * ph), Some((i as usize, j as usize))));
                 }
@@ -166,7 +184,6 @@ impl GridBuilder {
     }
 
     pub fn build(mut self) -> Result<Grid, Error> {
-
         self = self.init_cells(true);
 
         Ok(Grid {
@@ -180,13 +197,17 @@ impl GridBuilder {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Cell {
-    pos: (i32, i32), // abs cell pos
+    pos: (i32, i32),                  // abs cell pos
     grid_pos: Option<(usize, usize)>, // grid's cell pos
     moviment_dificulty: u8,
 }
 
 impl Cell {
-    fn new(pos: (i32, i32), grid_pos: Option<(usize, usize)>, moviment_dificulty: u8) -> Result<Self, Error> {
+    fn new(
+        pos: (i32, i32),
+        grid_pos: Option<(usize, usize)>,
+        moviment_dificulty: u8,
+    ) -> Result<Self, Error> {
         if moviment_dificulty > 8 {
             return Err(Error::CellCreationError(format!("{}", moviment_dificulty)));
         }
